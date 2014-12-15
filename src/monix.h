@@ -11,10 +11,18 @@
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
 #include <stdlib.h>
+#include <sys/ptrace.h>
+#include <sys/types.h>
 
 #include "common.h"
 #include "debug.h"
 
-void search_process_directory(const gchar *path);
+struct _process_info
+{
+    gint pid;
+};
+
+void search_process_directory(struct _process_info *pinfo, const gchar *path);
+gint extract_pid(gchar *data);
 
 #endif

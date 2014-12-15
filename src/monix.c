@@ -1,26 +1,25 @@
 //
 //  Copyright 2014 Wahankh <dev@wahankh.co.uk>
 //
-//  2014-12-7T19:12+0000
+//  2014-12-15T18:22+0000
 
 #include "monix.h"
 
-gint main(gint argc, gchar **argv)
-{
-    g_type_init();
-    
-    search_process_directory("/proc");
-    
-    return EXIT_SUCCESS;
-}
-
-void search_process_directory(const gchar *path)
+//
+//
+//
+void search_process_directory(struct _process_info *pinfo, const gchar *path)
 {
     GError *error = NULL;
     GFile *dir;
     GFileInfo *info;
     GFileEnumerator *enumerator;
     gchar *dir_path;
+    const gchar* browsers[] = {
+        "iceweasel",
+        "firefox",
+        "seamonkey"
+    };
     
     dir = g_file_new_for_path(path);
     enumerator = g_file_enumerate_children(dir, NULL, 0, NULL, &error);
@@ -75,22 +74,29 @@ void search_process_directory(const gchar *path)
                 while((status = g_io_channel_read_line(gio, &buffer, NULL,NULL, &error)))
                 {
                     if(status == G_IO_STATUS_NORMAL)
-                    {                        
-                        // contains string
-                        if(g_strstr_len(buffer, -1, "iceweasel") != NULL)
-                        {
-                            #ifdef DEBUG 
-                                debug(g_strdup_printf("Found Iceweasel -> %s", status_file)); 
-                            #endif
-                            
-                            found = TRUE;                            
-                        }
+                    {
+                        gint i = 0;
                         
+                        for(i=0; i <= 2; i++)
+                        {
+                            // contains string
+                            if(g_strstr_len(buffer, -1, browsers[i]) != NULL)
+                            {
+                                #ifdef DEBUG 
+                                    debug(g_strdup_printf("%s -> %s", browsers[i], status_file)); 
+                                #endif
+                                
+                                found = TRUE;                            
+                            }
+                        }
+                          
                         if(g_strstr_len(buffer, -1, "Pid") != NULL && found)
                         {
                             #ifdef DEBUG 
                                 debug(g_strdup_printf("%s", buffer)); 
                             #endif
+                            
+                            pinfo->pid = extract_pid(buffer);
                             
                             break;
                         }
@@ -122,7 +128,7 @@ void search_process_directory(const gchar *path)
             gchar *next_dir;
             
             next_dir = g_strdup_printf("%s/%s", dir_path, name);
-            search_process_directory(next_dir);
+            search_process_directory(pinfo, next_dir);
             
             g_free(next_dir);
         }
@@ -135,4 +141,37 @@ void search_process_directory(const gchar *path)
     
     g_object_unref(enumerator);
     g_free(dir_path);
+}
+
+//
+//
+//
+gint extract_pid(gchar *data)
+{
+    gint pid;
+    
+    if((sscanf(data, "%*[^0-9]%d", &pid)) == 1)
+    {
+        return pid;
+    }
+    
+    return 0;
+}
+
+//
+//
+//
+gint main(gint argc, gchar **argv)
+{
+    struct _process_info pinfo;
+    
+    g_type_init();
+    pinfo.pid = 0;
+    
+    // get process
+    search_process_directory(&pinfo, "/proc");
+    
+    g_print("%d\n", pinfo.pid);
+    
+    return EXIT_SUCCESS;
 }
