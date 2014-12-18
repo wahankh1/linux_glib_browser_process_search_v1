@@ -1,7 +1,7 @@
 //
 //  Copyright 2014 Wahankh <dev@wahankh.co.uk>
 //
-//  2014-12-7T19:12+0000
+//  2014-12-18T20:35+0000
 
 #ifndef MONIX_H
 #define MONIX_H
@@ -16,13 +16,6 @@
 
 #include "common.h"
 #include "debug.h"
-
-struct _process_info
-{
-    gint pid;
-};
-
-void search_process_directory(struct _process_info *pinfo, const gchar *path);
-gint extract_pid(gchar *data);
+#include "core.h"
 
 #endif
